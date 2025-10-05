@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import axiosClient from "../utils/axiosClient"
 import SubmissionHistory from "../components/SubmissionHistory"
 import ChatAi from '../components/ChatAi';
 import Editorial from '../components/Editorial';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../authSlice';
 
 const langMap = {
         cpp: 'C++',
         java: 'Java',
         javascript: 'JavaScript'
 };
-
 
 const ProblemPage = () => {
   const [problem, setProblem] = useState(null);
@@ -24,9 +25,9 @@ const ProblemPage = () => {
   const [activeRightTab, setActiveRightTab] = useState('code');
   const editorRef = useRef(null);
   let {problemId}  = useParams();
-
-  
-
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
  useEffect(() => {
     const fetchProblem = async () => {
@@ -70,6 +71,18 @@ const ProblemPage = () => {
 
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
+  };
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+  };
+
+  const handleProfileClick = () => {
+    navigate("/profile", { replace: true });
+  };
+
+  const handleAdminClick = () => {
+    navigate("/admin", { replace: true });
   };
 
   const handleRun = async () => {
@@ -137,6 +150,11 @@ const ProblemPage = () => {
     }
   };
 
+  const getProfilePicUrl = (user) => {
+    if (!user) return 'https://www.gravatar.com/avatar/?d=mp&s=200';
+    return user.image || 'https://www.gravatar.com/avatar/?d=mp&s=200';
+  };
+
   if (loading && !problem) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -149,6 +167,17 @@ const ProblemPage = () => {
     <div className="h-screen flex bg-base-100">
       {/* Left Panel */}
       <div className="w-1/2 flex flex-col border-r border-base-300">
+        {/* Left Header with Home Button */}
+        <div className="flex items-center justify-between p-4 border-b border-base-300 bg-base-200">
+          <button 
+            className="btn btn-ghost btn-sm hover:bg-base-300 text-white border-gray-600"
+            onClick={() => navigate('/')}
+          >
+            ← Back to Home
+          </button>
+          <h2 className="text-lg font-semibold text-gray-300">Problem Solver</h2>
+        </div>
+
         {/* Left Tabs */}
         <div className="tabs tabs-bordered bg-base-200 px-4">
           <button 
@@ -182,8 +211,6 @@ const ProblemPage = () => {
           >
             ChatAI
           </button>
-
-
         </div>
 
         {/* Left Content */}
@@ -277,6 +304,79 @@ const ProblemPage = () => {
 
       {/* Right Panel */}
       <div className="w-1/2 flex flex-col">
+        {/* Right Header */}
+        <div className="flex items-center justify-between p-4 border-b border-base-300 bg-base-200">
+          <h2 className="text-lg font-semibold text-gray-300">Code Editor</h2>
+          {/* Profile / Avatar Dropdown */}
+          <div className="flex-none gap-4">
+            <div className="dropdown dropdown-end">
+              <label tabIndex={0} className="btn btn-ghost gap-2 normal-case cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <div className="avatar">
+                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                      <img src={getProfilePicUrl(user)} alt="profile" />
+                    </div>
+                  </div>
+                  <span className="hidden md:inline">{user?.firstName || 'User'}</span>
+                  <svg className="w-4 h-4 hidden md:inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </label>
+
+              <ul tabIndex={0} className="dropdown-content mt-3 z-[1] p-2 shadow-lg bg-base-100 rounded-box w-64">
+                <div className="card card-compact w-full bg-base-100">
+                  <div className="card-body p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="avatar">
+                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                          <img src={getProfilePicUrl(user)} alt="profile large" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'}
+                        </div>
+                        <div className="text-xs opacity-60">{user?.emailId || 'No email'}</div>
+                      </div>
+                    </div>
+
+                    <div className="divider my-2"></div>
+
+                    <div className="flex flex-col gap-2">
+                      <button 
+                        onClick={handleProfileClick}
+                        className="btn btn-ghost justify-start normal-case"
+                      >
+                        View Profile
+                      </button>
+
+                      {user?.role === 'admin' && (
+                        <button 
+                          onClick={handleAdminClick}
+                          className="btn btn-ghost justify-start normal-case gap-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18M3 6h18M3 18h18" />
+                          </svg>
+                          Admin Panel
+                        </button>
+                      )}
+
+                      <button 
+                        onClick={handleLogout} 
+                        className="btn btn-error btn-sm mt-1"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Right Tabs */}
         <div className="tabs tabs-bordered bg-base-200 px-4">
           <button 
