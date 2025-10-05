@@ -23,8 +23,8 @@ const register = async(req,res)=>{
 
         // creating user and sending token after register
         const user = await User.create(req.body);
-        const token = jwt.sign({_id:user._id, emailId:emailId, role:'user'}, process.env.JWT_KEY, {expiresIn:'1d'})
-        res.cookie('token',token,{maxAge:ms('1d')});
+        const token = jwt.sign({_id:user._id, emailId:emailId, role:'user'}, process.env.JWT_KEY, {expiresIn:'7d'})
+        res.cookie('token',token,{maxAge:ms('7d')});
 
         const reply = {
             firstName: user.firstName,
@@ -68,7 +68,7 @@ const login = async(req,res)=>{
         const token = jwt.sign(
         { _id: user._id, emailId: user.emailId, role:user.role },
         process.env.JWT_KEY,
-        { expiresIn: "1d" }
+        { expiresIn: "7d" }
         );
 
         const reply = {
@@ -78,7 +78,7 @@ const login = async(req,res)=>{
             role:user.role
         }
         // Send token in cookie
-        res.cookie("token", token, { maxAge:ms('1d') });
+        res.cookie("token", token, { maxAge:ms('7d') });
 
         res.status(200).json({
             user:reply,
