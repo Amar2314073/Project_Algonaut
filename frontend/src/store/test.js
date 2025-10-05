@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink } from 'react-router';
+import { NavLink } from 'react-router'; // Fixed import
 import { useDispatch, useSelector } from 'react-redux';
 import axiosClient from '../utils/axiosClient';
 import { logoutUser } from '../authSlice';
@@ -8,23 +8,24 @@ import { fetchAllProblems } from "../problemSlice";
 function Homepage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
   const [filters, setFilters] = useState({
     difficulty: 'all',
     tag: 'all',
-    status: 'all'
+    status: 'all' 
   });
 
-  // Fetch all problems from redux thunk
-  const { data: problems, loading, error } = useSelector((state) => state.allProblems);
-
-
   useEffect(() => {
-    dispatch(fetchAllProblems());
-  }, [dispatch]);
+    const fetchProblems = async () => {
+      try {
+        const { data } = await axiosClient.get('/problem/getAllProblem');
+        setProblems(data);
+      } catch (error) {
+        console.error('Error fetching problems:', error);
+      }
+    };
 
-  // Fetch solved problems
-  useEffect(() => {
     const fetchSolvedProblems = async () => {
       try {
         const { data } = await axiosClient.get('/problem/problemSolvedByUser');
@@ -34,22 +35,20 @@ function Homepage() {
       }
     };
 
+    fetchProblems();
     if (user) fetchSolvedProblems();
-    else setSolvedProblems([]);
   }, [user]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
-    setSolvedProblems([]);
+    setSolvedProblems([]); // Clear solved problems on logout
   };
 
-  // Filter logic
-  const filteredProblems = (problems || []).filter(problem => {
+  const filteredProblems = problems.filter(problem => {
     const difficultyMatch = filters.difficulty === 'all' || problem.difficulty === filters.difficulty;
     const tagMatch = filters.tag === 'all' || problem.tags === filters.tag;
-    const statusMatch =
-      filters.status === 'all' ||
-      (filters.status === 'solved' && solvedProblems.some(sp => sp._id === problem._id));
+    const statusMatch = filters.status === 'all' || 
+                      solvedProblems.some(sp => sp._id === problem._id);
     return difficultyMatch && tagMatch && statusMatch;
   });
 
@@ -63,11 +62,11 @@ function Homepage() {
         <div className="flex-none gap-4">
           <div className="dropdown dropdown-end">
             <div tabIndex={0} className="btn btn-ghost">
-              {user?.firstName || "Guest"}
+              {user?.firstName}
             </div>
             <ul className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-              {user && <li><button onClick={handleLogout}>Logout</button></li>}
-              {user?.role === 'admin' && <li><NavLink to="/admin">Admin</NavLink></li>}
+              <li><button onClick={handleLogout}>Logout</button></li>
+              {user.role=='admin'&&<li><NavLink to="/admin">Admin</NavLink></li>}
             </ul>
           </div>
         </div>
@@ -77,6 +76,7 @@ function Homepage() {
       <div className="container mx-auto p-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
+          {/* New Status Filter */}
           <select 
             className="select select-bordered"
             value={filters.status}
@@ -111,9 +111,6 @@ function Homepage() {
         </div>
 
         {/* Problems List */}
-        {loading && <p className="text-center">Loading problems...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
-
         <div className="grid gap-4">
           {filteredProblems.map(problem => (
             <div key={problem._id} className="card bg-base-100 shadow-xl">
@@ -126,10 +123,14 @@ function Homepage() {
                   </h2>
                   {solvedProblems.some(sp => sp._id === problem._id) && (
                     <div className="badge badge-success gap-2">
-                      ✅ Solved
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Solved
                     </div>
                   )}
                 </div>
+                
                 <div className="flex gap-2">
                   <div className={`badge ${getDifficultyBadgeColor(problem.difficulty)}`}>
                     {problem.difficulty}

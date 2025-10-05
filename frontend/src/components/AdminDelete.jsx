@@ -1,38 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import axiosClient from '../utils/axiosClient'
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAllProblems } from "../problemSlice";
 
 const AdminDelete = () => {
-  const [problems, setProblems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { data: problems, loading, error } = useSelector((state) => state.allProblems);
 
 
   useEffect(() => {
-    fetchProblems();
-  }, []);
-
-  const fetchProblems = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axiosClient.get('/problem/getAllProblem');
-      setProblems(data);
-    } catch (err) {
-      setError('Failed to fetch problems');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (!problems || problems.length === 0) {
+      dispatch(fetchAllProblems());
     }
-  };
+  }, [dispatch, problems]);
+
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this problem?')) return;
     
     try {
       await axiosClient.delete(`/problem/delete/${id}`);
-      setProblems(problems.filter(problem => problem._id !== id));
+      dispatch(fetchAllProblems());
     } catch (err) {
-      setError('Failed to delete problem');
-      console.error(err);
+      console.error('Failed to delete problem:', err);
+      alert('Failed to delete problem');
     }
   };
 
