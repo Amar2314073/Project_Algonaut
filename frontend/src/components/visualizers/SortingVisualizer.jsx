@@ -1,5 +1,5 @@
 // components/visualizers/SortingVisualizer.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
 class ArrayElement {
@@ -7,7 +7,7 @@ class ArrayElement {
     this.value = value;
     this.index = index;
     this.id = `element-${index}-${value}`;
-    this.state = 'default'; // 'default', 'comparing', 'swapping', 'sorted', 'pivot', 'min', 'max'
+    this.state = 'default';
     this.height = value;
     this.color = '#3B82F6';
   }
@@ -27,7 +27,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Bubble Sort: Repeatedly swap adjacent elements if they are in wrong order'
+      description: 'Starting Bubble Sort: Repeatedly swap adjacent elements if they are in wrong order',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     for (let i = 0; i < n - 1; i++) {
@@ -36,75 +37,71 @@ class SortingAlgorithms {
       steps.push({
         type: 'pass',
         pass: i + 1,
-        description: `Pass ${i + 1}: Comparing adjacent elements`
+        description: `Pass ${i + 1}: Comparing adjacent elements`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       for (let j = 0; j < n - i - 1; j++) {
-        // Compare elements
         arr[j].state = 'comparing';
         arr[j + 1].state = 'comparing';
         
         steps.push({
           type: 'compare',
           indices: [j, j + 1],
-          description: `Comparing arr[${j}] = ${arr[j].value} and arr[${j + 1}] = ${arr[j + 1].value}`
+          description: `Comparing arr[${j}] = ${arr[j].value} and arr[${j + 1}] = ${arr[j + 1].value}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         if (arr[j].value > arr[j + 1].value) {
-          // Swap elements
           [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
           swapped = true;
           
           steps.push({
             type: 'swap',
             indices: [j, j + 1],
-            description: `Swapping ${arr[j + 1].value} and ${arr[j].value}`
+            description: `Swapping ${arr[j].value} and ${arr[j + 1].value}`,
+            array: JSON.parse(JSON.stringify(arr))
           });
         } else {
           steps.push({
             type: 'no-swap',
             indices: [j, j + 1],
-            description: `No swap needed - elements are in order`
+            description: `No swap needed - elements are in order`,
+            array: JSON.parse(JSON.stringify(arr))
           });
         }
 
-        // Reset comparison state
         arr[j].state = 'default';
         arr[j + 1].state = 'default';
-
-        steps.push({
-          type: 'array-state',
-          array: JSON.parse(JSON.stringify(arr)),
-          description: `Array after comparison at indices ${j} and ${j + 1}`
-        });
       }
 
-      // Mark last element as sorted
       arr[n - i - 1].state = 'sorted';
       
       steps.push({
         type: 'element-sorted',
         index: n - i - 1,
-        description: `Element at index ${n - i - 1} is now in its final position`
+        description: `Element at index ${n - i - 1} is now in its final position`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       if (!swapped) {
         steps.push({
           type: 'early-exit',
-          description: 'No swaps occurred in this pass - array is sorted!'
+          description: 'No swaps occurred in this pass - array is sorted!',
+          array: JSON.parse(JSON.stringify(arr))
         });
         break;
       }
     }
 
-    // Mark all elements as sorted
     arr.forEach((el, idx) => {
       el.state = 'sorted';
     });
 
     steps.push({
       type: 'complete',
-      description: 'Bubble Sort completed! Array is now sorted'
+      description: 'Bubble Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray: arr };
@@ -117,7 +114,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Selection Sort: Find minimum element and place it at beginning'
+      description: 'Starting Selection Sort: Find minimum element and place it at beginning',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     for (let i = 0; i < n - 1; i++) {
@@ -127,7 +125,8 @@ class SortingAlgorithms {
       steps.push({
         type: 'new-min',
         index: i,
-        description: `Starting from index ${i}, looking for minimum element`
+        description: `Starting from index ${i}, looking for minimum element`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       for (let j = i + 1; j < n; j++) {
@@ -136,11 +135,11 @@ class SortingAlgorithms {
         steps.push({
           type: 'compare',
           indices: [minIndex, j],
-          description: `Comparing current min (${arr[minIndex].value}) with arr[${j}] = ${arr[j].value}`
+          description: `Comparing current min (${arr[minIndex].value}) with arr[${j}] = ${arr[j].value}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         if (arr[j].value < arr[minIndex].value) {
-          // Reset previous min
           if (minIndex !== i) arr[minIndex].state = 'default';
           minIndex = j;
           arr[minIndex].state = 'min';
@@ -148,37 +147,39 @@ class SortingAlgorithms {
           steps.push({
             type: 'new-min-found',
             index: j,
-            description: `New minimum found: ${arr[j].value} at index ${j}`
+            description: `New minimum found: ${arr[j].value} at index ${j}`,
+            array: JSON.parse(JSON.stringify(arr))
           });
         } else {
           arr[j].state = 'default';
+          steps.push({
+            type: 'no-swap',
+            indices: [minIndex, j],
+            description: `${arr[j].value} is not smaller than current min`,
+            array: JSON.parse(JSON.stringify(arr))
+          });
         }
       }
 
-      // Swap if needed
       if (minIndex !== i) {
         [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
         
         steps.push({
           type: 'swap',
           indices: [i, minIndex],
-          description: `Swapping ${arr[minIndex].value} and ${arr[i].value}`
+          description: `Swapping ${arr[i].value} and ${arr[minIndex].value}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
       }
 
       arr[i].state = 'sorted';
-      if (minIndex !== i) arr[minIndex].state = 'default';
+      if (minIndex !== i && minIndex < n) arr[minIndex].state = 'default';
       
       steps.push({
         type: 'element-sorted',
         index: i,
-        description: `Element ${arr[i].value} placed at its correct position ${i}`
-      });
-
-      steps.push({
-        type: 'array-state',
-        array: JSON.parse(JSON.stringify(arr)),
-        description: `Array after placing element at position ${i}`
+        description: `Element ${arr[i].value} placed at its correct position ${i}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
     }
 
@@ -186,7 +187,8 @@ class SortingAlgorithms {
     
     steps.push({
       type: 'complete',
-      description: 'Selection Sort completed! Array is now sorted'
+      description: 'Selection Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray: arr };
@@ -199,7 +201,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Insertion Sort: Build sorted array one element at a time'
+      description: 'Starting Insertion Sort: Build sorted array one element at a time',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     arr[0].state = 'sorted';
@@ -207,7 +210,8 @@ class SortingAlgorithms {
     steps.push({
       type: 'element-sorted',
       index: 0,
-      description: 'First element is already sorted'
+      description: 'First element is already sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     for (let i = 1; i < n; i++) {
@@ -218,7 +222,8 @@ class SortingAlgorithms {
       steps.push({
         type: 'key-selected',
         index: i,
-        description: `Selecting element ${key} at index ${i} to insert into sorted portion`
+        description: `Selecting element ${key} at index ${i} to insert into sorted portion`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       while (j >= 0 && arr[j].value > key) {
@@ -230,7 +235,8 @@ class SortingAlgorithms {
           type: 'shift',
           from: j,
           to: j + 1,
-          description: `Shifting element ${arr[j].value} from index ${j} to ${j + 1}`
+          description: `Shifting element ${arr[j].value} from index ${j} to ${j + 1}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         arr[j].state = 'default';
@@ -244,19 +250,15 @@ class SortingAlgorithms {
         type: 'insert',
         index: j + 1,
         value: key,
-        description: `Inserting ${key} at correct position ${j + 1}`
-      });
-
-      steps.push({
-        type: 'array-state',
-        array: JSON.parse(JSON.stringify(arr)),
-        description: `Array after inserting element at position ${j + 1}`
+        description: `Inserting ${key} at correct position ${j + 1}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
     }
 
     steps.push({
       type: 'complete',
-      description: 'Insertion Sort completed! Array is now sorted'
+      description: 'Insertion Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray: arr };
@@ -268,7 +270,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Merge Sort: Divide and conquer algorithm'
+      description: 'Starting Merge Sort: Divide and conquer algorithm',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     const merge = (left, right, startIndex) => {
@@ -279,7 +282,8 @@ class SortingAlgorithms {
         type: 'merge-start',
         left: left.map(el => el.value),
         right: right.map(el => el.value),
-        description: `Merging two sorted subarrays: [${left.map(el => el.value)}] and [${right.map(el => el.value)}]`
+        description: `Merging two sorted subarrays: [${left.map(el => el.value)}] and [${right.map(el => el.value)}]`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       while (i < left.length && j < right.length) {
@@ -289,7 +293,8 @@ class SortingAlgorithms {
         steps.push({
           type: 'compare',
           indices: [startIndex + i, startIndex + left.length + j],
-          description: `Comparing ${left[i].value} and ${right[j].value}`
+          description: `Comparing ${left[i].value} and ${right[j].value}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         if (left[i].value <= right[j].value) {
@@ -303,7 +308,6 @@ class SortingAlgorithms {
         }
       }
 
-      // Add remaining elements
       while (i < left.length) {
         merged.push(left[i]);
         left[i].state = 'default';
@@ -315,7 +319,6 @@ class SortingAlgorithms {
         j++;
       }
 
-      // Mark merged elements as sorted
       merged.forEach((el, idx) => {
         el.state = 'sorted';
       });
@@ -323,7 +326,8 @@ class SortingAlgorithms {
       steps.push({
         type: 'merge-complete',
         merged: merged.map(el => el.value),
-        description: `Merged subarray: [${merged.map(el => el.value)}]`
+        description: `Merged subarray: [${merged.map(el => el.value)}]`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       return merged;
@@ -343,7 +347,8 @@ class SortingAlgorithms {
         type: 'split',
         left: left.map(el => el.value),
         right: right.map(el => el.value),
-        description: `Splitting array at index ${mid}: [${left.map(el => el.value)}] | [${right.map(el => el.value)}]`
+        description: `Splitting array at index ${mid}: [${left.map(el => el.value)}] | [${right.map(el => el.value)}]`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       return merge(
@@ -357,7 +362,8 @@ class SortingAlgorithms {
     
     steps.push({
       type: 'complete',
-      description: 'Merge Sort completed! Array is now sorted'
+      description: 'Merge Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray };
@@ -369,7 +375,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Quick Sort: Divide and conquer with pivot selection'
+      description: 'Starting Quick Sort: Divide and conquer with pivot selection',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     const partition = (low, high) => {
@@ -380,7 +387,8 @@ class SortingAlgorithms {
         type: 'pivot-select',
         index: high,
         value: pivot,
-        description: `Selecting pivot: ${pivot} at index ${high}`
+        description: `Selecting pivot: ${pivot} at index ${high}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       let i = low - 1;
@@ -391,7 +399,8 @@ class SortingAlgorithms {
         steps.push({
           type: 'compare',
           indices: [j, high],
-          description: `Comparing arr[${j}] = ${arr[j].value} with pivot ${pivot}`
+          description: `Comparing arr[${j}] = ${arr[j].value} with pivot ${pivot}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         if (arr[j].value <= pivot) {
@@ -402,7 +411,8 @@ class SortingAlgorithms {
             steps.push({
               type: 'swap',
               indices: [i, j],
-              description: `Swapping ${arr[j].value} and ${arr[i].value}`
+              description: `Swapping ${arr[j].value} and ${arr[i].value}`,
+              array: JSON.parse(JSON.stringify(arr))
             });
           }
         }
@@ -416,7 +426,8 @@ class SortingAlgorithms {
       steps.push({
         type: 'pivot-place',
         index: i + 1,
-        description: `Pivot ${pivot} placed at correct position ${i + 1}`
+        description: `Pivot ${pivot} placed at correct position ${i + 1}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       return i + 1;
@@ -428,7 +439,8 @@ class SortingAlgorithms {
           type: 'partition-range',
           low,
           high,
-          description: `Partitioning subarray from index ${low} to ${high}`
+          description: `Partitioning subarray from index ${low} to ${high}`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         const pi = partition(low, high);
@@ -437,7 +449,8 @@ class SortingAlgorithms {
           type: 'recursive-call',
           left: [low, pi - 1],
           right: [pi + 1, high],
-          description: `Recursively sorting left [${low}, ${pi - 1}] and right [${pi + 1}, ${high}] partitions`
+          description: `Recursively sorting left [${low}, ${pi - 1}] and right [${pi + 1}, ${high}] partitions`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
         sort(low, pi - 1);
@@ -448,7 +461,8 @@ class SortingAlgorithms {
         steps.push({
           type: 'element-sorted',
           index: low,
-          description: `Single element at index ${low} is sorted`
+          description: `Single element at index ${low} is sorted`,
+          array: JSON.parse(JSON.stringify(arr))
         });
       }
     };
@@ -457,7 +471,8 @@ class SortingAlgorithms {
     
     steps.push({
       type: 'complete',
-      description: 'Quick Sort completed! Array is now sorted'
+      description: 'Quick Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray: arr };
@@ -470,7 +485,8 @@ class SortingAlgorithms {
 
     steps.push({
       type: 'start',
-      description: 'Starting Heap Sort: Build max heap and repeatedly extract maximum element'
+      description: 'Starting Heap Sort: Build max heap and repeatedly extract maximum element',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     const heapify = (n, i) => {
@@ -487,7 +503,8 @@ class SortingAlgorithms {
         root: i,
         left,
         right,
-        description: `Heapifying node at index ${i} with children at ${left} and ${right}`
+        description: `Heapifying node at index ${i} with children at ${left} and ${right}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       if (left < n && arr[left].value > arr[largest].value) {
@@ -504,37 +521,36 @@ class SortingAlgorithms {
         steps.push({
           type: 'swap',
           indices: [i, largest],
-          description: `Swapping ${arr[largest].value} and ${arr[i].value} to maintain heap property`
+          description: `Swapping ${arr[largest].value} and ${arr[i].value} to maintain heap property`,
+          array: JSON.parse(JSON.stringify(arr))
         });
 
-        // Reset colors
         arr[i].state = 'default';
         if (left < n) arr[left].state = 'default';
         if (right < n) arr[right].state = 'default';
 
         heapify(n, largest);
       } else {
-        // Reset colors
         arr[i].state = 'default';
         if (left < n) arr[left].state = 'default';
         if (right < n) arr[right].state = 'default';
       }
     };
 
-    // Build max heap
     steps.push({
       type: 'build-heap',
-      description: 'Building max heap from array'
+      description: 'Building max heap from array',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
       heapify(n, i);
     }
 
-    // Extract elements from heap
     steps.push({
       type: 'extract-start',
-      description: 'Extracting elements from heap in sorted order'
+      description: 'Extracting elements from heap in sorted order',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     for (let i = n - 1; i > 0; i--) {
@@ -544,13 +560,15 @@ class SortingAlgorithms {
       steps.push({
         type: 'swap',
         indices: [0, i],
-        description: `Moving current maximum from root to position ${i}`
+        description: `Moving current maximum from root to position ${i}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       steps.push({
         type: 'element-sorted',
         index: i,
-        description: `Element ${arr[i].value} placed at final position ${i}`
+        description: `Element ${arr[i].value} placed at final position ${i}`,
+        array: JSON.parse(JSON.stringify(arr))
       });
 
       heapify(i, 0);
@@ -560,7 +578,8 @@ class SortingAlgorithms {
     
     steps.push({
       type: 'complete',
-      description: 'Heap Sort completed! Array is now sorted'
+      description: 'Heap Sort completed! Array is now sorted',
+      array: JSON.parse(JSON.stringify(arr))
     });
 
     return { steps, sortedArray: arr };
@@ -581,18 +600,24 @@ function SortingVisualizer() {
   const [arraySize, setArraySize] = useState(15);
   const [showComplexity, setShowComplexity] = useState(true);
   const [arrayType, setArrayType] = useState('random');
+  
+  const animationRef = useRef(null);
+  const shouldStopRef = useRef(false);
 
-  // Initialize array
+  // Initialize array with proper height scaling
   const generateArray = useCallback(() => {
     const newArray = [];
+    const maxHeight = 80; // Maximum height percentage for bars
     
     if (arrayType === 'random') {
       for (let i = 0; i < arraySize; i++) {
-        newArray.push(new ArrayElement(Math.floor(Math.random() * 95) + 5, i));
+        const value = Math.floor(Math.random() * 95) + 5;
+        newArray.push(new ArrayElement(value, i));
       }
     } else if (arrayType === 'nearly-sorted') {
       for (let i = 0; i < arraySize; i++) {
-        newArray.push(new ArrayElement(i * 5 + 5, i));
+        const value = Math.floor((i * maxHeight) / arraySize) + 10;
+        newArray.push(new ArrayElement(value, i));
       }
       // Shuffle slightly
       for (let i = 0; i < arraySize / 5; i++) {
@@ -602,12 +627,14 @@ function SortingVisualizer() {
       }
     } else if (arrayType === 'reversed') {
       for (let i = 0; i < arraySize; i++) {
-        newArray.push(new ArrayElement((arraySize - i) * 5 + 5, i));
+        const value = Math.floor(((arraySize - i - 1) * maxHeight) / arraySize) + 10;
+        newArray.push(new ArrayElement(value, i));
       }
     } else if (arrayType === 'few-unique') {
-      const values = [10, 30, 50, 70, 90];
+      const values = [20, 40, 60, 80];
       for (let i = 0; i < arraySize; i++) {
-        newArray.push(new ArrayElement(values[Math.floor(Math.random() * values.length)], i));
+        const value = values[Math.floor(Math.random() * values.length)];
+        newArray.push(new ArrayElement(value, i));
       }
     }
 
@@ -626,9 +653,12 @@ function SortingVisualizer() {
 
   // Sort array
   const sortArray = async () => {
+    if (isAnimating) return;
+    
     setIsAnimating(true);
     setIsPaused(false);
     setCurrentStep(0);
+    shouldStopRef.current = false;
 
     let result;
     switch (algorithm) {
@@ -659,31 +689,45 @@ function SortingVisualizer() {
 
     // Execute animations
     for (let i = 0; i < result.steps.length; i++) {
+      if (shouldStopRef.current) break;
+      
       if (isPaused) {
-        while (isPaused) {
+        while (isPaused && !shouldStopRef.current) {
           await sleep(100);
         }
+        if (shouldStopRef.current) break;
       }
 
       const step = result.steps[i];
       setCurrentStep(i + 1);
       setMessage(step.description);
 
-      // Update array visualization based on step type
-      if (step.type === 'array-state' && step.array) {
+      // Always update array from step data
+      if (step.array) {
         setArray(step.array.map((el, idx) => {
           const newEl = new ArrayElement(el.value, idx);
           newEl.state = el.state;
+          newEl.color = el.color || '#3B82F6';
           return newEl;
         }));
       }
 
-      await sleep(animationSpeed);
+      await sleep(500 - animationSpeed);
     }
 
-    // Final update with sorted array
-    setArray(result.sortedArray);
+    if (!shouldStopRef.current) {
+      // Final update with sorted array
+      if (result.sortedArray) {
+        setArray(result.sortedArray.map((el, idx) => {
+          const newEl = new ArrayElement(el.value, idx);
+          newEl.state = 'sorted';
+          return newEl;
+        }));
+      }
+    }
+    
     setIsAnimating(false);
+    shouldStopRef.current = false;
   };
 
   // Get element color based on state
@@ -704,6 +748,16 @@ function SortingVisualizer() {
       default:
         return '#3B82F6'; // Blue
     }
+  };
+
+  // Reset animation
+  const resetAnimation = () => {
+    shouldStopRef.current = true;
+    setIsAnimating(false);
+    setIsPaused(false);
+    setCurrentStep(0);
+    setSteps([]);
+    generateArray();
   };
 
   // Get algorithm complexity
@@ -842,9 +896,9 @@ function SortingVisualizer() {
                   </select>
                 </div>
 
-                <div className="form-control mt-4">
+                <div className="flex gap-2 mt-4">
                   <button 
-                    className="btn btn-primary"
+                    className="btn btn-primary flex-1"
                     onClick={sortArray}
                     disabled={isAnimating}
                   >
@@ -853,6 +907,13 @@ function SortingVisualizer() {
                     ) : (
                       `Run ${algorithm.charAt(0).toUpperCase() + algorithm.slice(1)} Sort`
                     )}
+                  </button>
+                  
+                  <button 
+                    className="btn btn-outline btn-error"
+                    onClick={resetAnimation}
+                  >
+                    Reset
                   </button>
                 </div>
 
@@ -880,8 +941,8 @@ function SortingVisualizer() {
                   </label>
                   <input 
                     type="range" 
-                    min="5" 
-                    max="30" 
+                    min="10" 
+                    max="50" 
                     value={arraySize}
                     onChange={(e) => setArraySize(parseInt(e.target.value))}
                     className="range range-primary"
@@ -931,13 +992,18 @@ function SortingVisualizer() {
                   </label>
                   <input 
                     type="range" 
-                    min="10" 
-                    max="500" 
+                    min="50" 
+                    max="490" 
                     value={animationSpeed}
                     onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
                     className="range range-primary"
                     disabled={isAnimating}
                   />
+                  <div className="text-center text-sm text-gray-400">
+                    {animationSpeed < 150 ? 'Slow' : 
+                     animationSpeed < 300 ? 'Medium' : 
+                     animationSpeed < 450 ? 'Fast' : 'Very Fast'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1042,31 +1108,32 @@ function SortingVisualizer() {
                     {algorithm.charAt(0).toUpperCase() + algorithm.slice(1)} Sort Visualization
                   </h3>
                   <div className="text-sm text-gray-400">
-                    {getAlgorithmDescription()}
+                    {isAnimating ? `Step ${currentStep} of ${totalSteps}` : 'Ready to sort'}
                   </div>
                 </div>
 
                 {/* Array Visualization */}
                 <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 min-h-96">
-                  <div className="flex items-end justify-center gap-1 h-80">
+                  <div className="flex items-end justify-center gap-1 h-80" style={{ minHeight: '320px' }}>
                     {array.map((element) => (
                       <div
                         key={element.id}
                         className="flex flex-col items-center transition-all duration-300 ease-in-out"
                         style={{ 
-                          width: `${80 / arraySize}%`,
+                          width: `${Math.max(80 / arraySize, 2)}%`,
                           minWidth: '8px'
                         }}
                       >
                         <div
-                          className="w-full rounded-t transition-all duration-300"
+                          className="w-full rounded-t transition-all duration-300 border border-gray-800 border-b-0"
                           style={{
                             height: `${element.value}%`,
                             backgroundColor: getElementColor(element),
-                            minHeight: '20px'
+                            minHeight: `${element.value*3}px`,
+                            transition: 'all 0.3s ease-in-out'
                           }}
                         ></div>
-                        <div className="mt-1 text-xs text-gray-400">
+                        <div className="mt-1 text-xs text-gray-400 font-mono">
                           {element.value}
                         </div>
                       </div>
@@ -1290,6 +1357,33 @@ function SortingVisualizer() {
                       <h5 className="font-bold text-green-400 mb-2">Parallel Sorting</h5>
                       <p className="text-gray-300">Bitonic Sort, Sample Sort for multi-core processors and distributed systems.</p>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Algorithm Details */}
+            <div className="card bg-gray-800 shadow-lg border border-gray-700 mt-6">
+              <div className="card-body">
+                <h3 className="card-title text-white">Algorithm Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-bold text-white mb-2">Key Characteristics</h4>
+                    <ul className="text-gray-300 text-sm space-y-1">
+                      <li>• {getAlgorithmDescription()}</li>
+                      <li>• Space Complexity: {complexity.space}</li>
+                      <li>• Stable: {complexity.stable}</li>
+                      <li>• In-place: {complexity.space === 'O(1)' ? 'Yes' : 'No'}</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white mb-2">Performance Tips</h4>
+                    <ul className="text-gray-300 text-sm space-y-1">
+                      <li>• Choose algorithm based on data characteristics</li>
+                      <li>• Consider memory constraints</li>
+                      <li>• Use hybrid algorithms for real-world applications</li>
+                      <li>• Prefer stable sorts when order matters</li>
+                    </ul>
                   </div>
                 </div>
               </div>
