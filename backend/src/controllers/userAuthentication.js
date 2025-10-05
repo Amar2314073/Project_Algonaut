@@ -156,6 +156,48 @@ const deleteProfile = async(req,res)=>{
     }
 }
 
+// Update User Profile
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.result._id;
+        const { firstName, lastName, emailId, age, image } = req.body;
 
-module.exports = {register, login, logout, adminRegister, deleteProfile};
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+
+        // Prepare update data
+        const updateData = {};
+        if (firstName) updateData.firstName = firstName;
+        if (lastName) updateData.lastName = lastName;
+        if (emailId) updateData.emailId = emailId;
+        if (age) updateData.age = age;
+        if (image) updateData.image = image;
+
+        // Update user profile
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password'); // Exclude password from response
+
+        if (!updatedUser) {
+            return res.status(404).send("User not found");
+        }
+
+        res.status(200).json({
+            user: updatedUser,
+            message: "Profile updated successfully!"
+        });
+
+    } catch (err) {
+        console.error("Error updating profile:", err);
+        res.status(500).send("Error: " + err.message);
+    }
+};
+
+
+module.exports = {register, login, logout, adminRegister, deleteProfile, updateProfile};
 

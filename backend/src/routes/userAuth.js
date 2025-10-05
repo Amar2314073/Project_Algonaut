@@ -1,7 +1,7 @@
 
 const express = require('express');
 const authRouter = express.Router();
-const {register, login, logout, adminRegister, deleteProfile} = require('../controllers/userAuthentication');
+const {register, login, logout, adminRegister, deleteProfile, updateProfile} = require('../controllers/userAuthentication');
 const userMiddleware = require('../middleware/userMiddleware');
 const redisClient = require('../config/redis');
 const adminMiddleware = require('../middleware/adminMiddleware')
@@ -13,6 +13,7 @@ authRouter.post('/login',login);
 authRouter.post('/logout',userMiddleware, logout);
 authRouter.post('/admin/register',adminMiddleware,adminRegister);
 authRouter.delete('/profile', userMiddleware, deleteProfile);
+authRouter.put('/profile', userMiddleware, updateProfile);
 
 authRouter.get('/check', userMiddleware, (req,res)=>{
     const reply = {
