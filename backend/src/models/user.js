@@ -42,8 +42,11 @@ const userSchema = new Schema({
     password:{
         type:String,
         required:true
+    },
+    image:{
+        type:String,
+        default: 'https://www.gravatar.com/avatar/?d=mp&s=200'
     }
-    
 },{
     timestamps:true
 });

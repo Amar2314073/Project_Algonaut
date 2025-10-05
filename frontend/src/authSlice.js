@@ -1,18 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosClient from './utils/axiosClient'
 
+// Register
 export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-    const response =  await axiosClient.post('/user/register', userData);
-    return response.data.user;
+      const response = await axiosClient.post('/user/register', userData);
+      return response.data.user;
     } catch (error) {
       return rejectWithValue(error);
     }
   }
 );
 
+// Login
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
@@ -25,6 +27,7 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Check Auth
 export const checkAuth = createAsyncThunk(
   'auth/check',
   async (_, { rejectWithValue }) => {
@@ -33,13 +36,14 @@ export const checkAuth = createAsyncThunk(
       return data.user;
     } catch (error) {
       if (error.response?.status === 401) {
-        return rejectWithValue(null); // Special case for no session
+        return rejectWithValue(null);
       }
       return rejectWithValue(error);
     }
   }
 );
 
+// Logout
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
@@ -52,6 +56,19 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Update User Profile
+export const updateUser = createAsyncThunk(
+  'auth/updateUser',
+  async (updatedData, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosClient.put('/user/updateProfile', updatedData);
+      return data.user; // assume backend returns updated user
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -60,15 +77,11 @@ const authSlice = createSlice({
     loading: false,
     error: null
   },
-  reducers: {
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // Register User Cases
-      .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Register
+      .addCase(registerUser.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = !!action.payload;
@@ -80,12 +93,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Login User Cases
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      // Login
+      .addCase(loginUser.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = !!action.payload;
@@ -97,12 +107,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Check Auth Cases
-      .addCase(checkAuth.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      // Check Auth
+      .addCase(checkAuth.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = !!action.payload;
@@ -114,12 +121,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Logout User Cases
-      .addCase(logoutUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      // Logout
+      .addCase(logoutUser.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(logoutUser.fulfilled, (state) => {
         state.loading = false;
         state.user = null;
@@ -131,6 +135,17 @@ const authSlice = createSlice({
         state.error = action.payload?.message || 'Something went wrong';
         state.isAuthenticated = false;
         state.user = null;
+      })
+
+      // **Update User**
+      .addCase(updateUser.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to update profile';
       });
   }
 });
