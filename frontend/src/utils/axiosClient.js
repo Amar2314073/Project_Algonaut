@@ -2,7 +2,7 @@
 import axios from "axios";
 
  const axiosClient = axios.create({
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://project-algonaut-4i35.vercel.app',
     withCredentials: true,
     headers:{
         'Content-Type': 'application/json'
