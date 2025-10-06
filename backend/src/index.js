@@ -12,38 +12,17 @@ const videoRouter = require("./routes/videoCreation");
 const cors = require('cors');
 
 
-// app.use(cors({
-//     origin:['http://localhost:5173', 'https://project-algonaut.vercel.app'],
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//     credentials: true
-// }))
+app.use(cors({
+    origin:['http://localhost:5173', 'https://project-algonaut.vercel.app'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}))
 
-// app.options('*', cors({
-//     origin: ['http://localhost:5173', 'https://project-algonaut.vercel.app'],
-//     credentials: true
-// }));
-
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://project-algonaut.vercel.app'
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-
-  // handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.options('*', cors({
+    origin: ['http://localhost:5173', 'https://project-algonaut.vercel.app'],
+    credentials: true
+}));
 
 
 app.use(express.json());
