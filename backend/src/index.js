@@ -14,8 +14,17 @@ const cors = require('cors');
 
 app.use(cors({
     origin:'https://project-algonaut.vercel.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }))
+
+app.options('*', cors({
+    origin: 'https://project-algonaut.vercel.app',
+    credentials: true
+}));
+
+
 app.use(express.json());
 app.use(cookieParser());
 
