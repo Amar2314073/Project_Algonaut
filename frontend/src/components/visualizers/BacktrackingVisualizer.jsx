@@ -1,5 +1,5 @@
 // components/visualizers/BacktrackingVisualizer.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
 class BacktrackingCell {
@@ -9,10 +9,11 @@ class BacktrackingCell {
     this.id = `cell-${row}-${col}`;
     this.value = value;
     this.original = value !== null;
-    this.state = 'empty'; // 'empty', 'filled', 'conflict', 'current', 'visited', 'solution'
+    this.state = 'empty'; // 'empty', 'filled', 'conflict', 'current', 'visited', 'solution', 'backtracked'
     this.highlighted = false;
     this.isSolutionPath = false;
     this.backtracked = false;
+    this.animation = '';
   }
 
   reset() {
@@ -23,6 +24,7 @@ class BacktrackingCell {
     this.highlighted = false;
     this.isSolutionPath = false;
     this.backtracked = false;
+    this.animation = '';
   }
 }
 
@@ -57,7 +59,8 @@ class BacktrackingAlgorithms {
         steps.push({
           type: 'solution',
           board: board.map(row => [...row]),
-          description: `Found solution ${solutions.length}!`
+          description: `🎉 Found solution ${solutions.length}! All queens placed safely.`,
+          solutionNumber: solutions.length
         });
         return true;
       }
@@ -68,7 +71,8 @@ class BacktrackingAlgorithms {
           type: 'try',
           row,
           col,
-          description: `Trying to place queen at (${row}, ${col})`
+          description: `🔍 Testing position (${row}, ${col}) for queen placement`,
+          currentQueens: [...currentSolution]
         });
 
         if (isSafe(board, row, col)) {
@@ -79,7 +83,8 @@ class BacktrackingAlgorithms {
             type: 'place',
             row,
             col,
-            description: `Placed queen at (${row}, ${col}) - safe position`
+            description: `✅ Placed queen at (${row}, ${col}) - position is safe`,
+            currentQueens: [...currentSolution]
           });
 
           if (solve(board, col + 1, currentSolution)) {
@@ -91,7 +96,8 @@ class BacktrackingAlgorithms {
             type: 'backtrack',
             row,
             col,
-            description: `Backtracking: removing queen from (${row}, ${col})`
+            description: `🔄 Backtracking: removing queen from (${row}, ${col})`,
+            currentQueens: [...currentSolution]
           });
 
           board[row][col] = 0;
@@ -101,7 +107,8 @@ class BacktrackingAlgorithms {
             type: 'conflict',
             row,
             col,
-            description: `Conflict at (${row}, ${col}) - cannot place queen here`
+            description: `❌ Conflict at (${row}, ${col}) - queen would be attacked`,
+            currentQueens: [...currentSolution]
           });
         }
       }
@@ -109,7 +116,20 @@ class BacktrackingAlgorithms {
       return found;
     };
 
+    steps.push({
+      type: 'start',
+      description: `🚀 Starting N-Queens solver for ${boardSize}×${boardSize} board`,
+      board: board.map(row => [...row])
+    });
+
     solve(board, 0);
+    
+    steps.push({
+      type: 'complete',
+      description: `✅ Completed! Found ${solutions.length} solution(s)`,
+      totalSolutions: solutions.length
+    });
+
     return { steps, solutions, totalSolutions: solutions.length };
   }
 
@@ -159,7 +179,7 @@ class BacktrackingAlgorithms {
         steps.push({
           type: 'solution',
           board: board.map(row => [...row]),
-          description: 'Sudoku solved!'
+          description: '🎉 Sudoku solved completely!'
         });
         return true;
       }
@@ -170,7 +190,7 @@ class BacktrackingAlgorithms {
         type: 'try-cell',
         row,
         col,
-        description: `Trying to fill empty cell at (${row}, ${col})`
+        description: `🔍 Focusing on empty cell at (${row}, ${col})`
       });
 
       for (let num = 1; num <= 9; num++) {
@@ -179,7 +199,7 @@ class BacktrackingAlgorithms {
           row,
           col,
           num,
-          description: `Trying number ${num} at (${row}, ${col})`
+          description: `🔢 Testing number ${num} at (${row}, ${col})`
         });
 
         if (isValid(board, row, col, num)) {
@@ -189,7 +209,7 @@ class BacktrackingAlgorithms {
             row,
             col,
             num,
-            description: `Placed ${num} at (${row}, ${col}) - valid move`
+            description: `✅ Placed ${num} at (${row}, ${col}) - valid placement`
           });
 
           if (solve()) {
@@ -201,7 +221,7 @@ class BacktrackingAlgorithms {
             type: 'backtrack',
             row,
             col,
-            description: `Backtracking: clearing cell (${row}, ${col})`
+            description: `🔄 Backtracking: clearing cell (${row}, ${col}) - dead end reached`
           });
           board[row][col] = 0;
         } else {
@@ -210,7 +230,7 @@ class BacktrackingAlgorithms {
             row,
             col,
             num,
-            description: `Conflict: ${num} not valid at (${row}, ${col})`
+            description: `❌ Conflict: ${num} violates Sudoku rules at (${row}, ${col})`
           });
         }
       }
@@ -218,7 +238,20 @@ class BacktrackingAlgorithms {
       return false;
     };
 
+    steps.push({
+      type: 'start',
+      description: '🚀 Starting Sudoku solver',
+      board: board.map(row => [...row])
+    });
+
     solve();
+    
+    steps.push({
+      type: 'complete',
+      description: `✅ Completed! ${solutions.length > 0 ? 'Puzzle solved!' : 'No solution found'}`,
+      totalSolutions: solutions.length
+    });
+
     return { steps, solutions, totalSolutions: solutions.length };
   }
 
@@ -243,7 +276,7 @@ class BacktrackingAlgorithms {
         steps.push({
           type: 'solution',
           path: [...path],
-          description: 'Found path to exit!'
+          description: '🎉 Found path to exit! Maze solved!'
         });
         path.pop();
         return true;
@@ -262,7 +295,7 @@ class BacktrackingAlgorithms {
         row,
         col,
         path: [...path],
-        description: `Visiting cell (${row}, ${col})`
+        description: `📍 Visiting cell (${row}, ${col}) - path length: ${path.length}`
       });
 
       // Move in all four directions
@@ -283,7 +316,7 @@ class BacktrackingAlgorithms {
           row: newRow,
           col: newCol,
           direction,
-          description: `Trying to move ${direction} to (${newRow}, ${newCol})`
+          description: `➡️ Trying to move ${direction} to (${newRow}, ${newCol})`
         });
 
         if (solve(newRow, newCol)) {
@@ -297,7 +330,7 @@ class BacktrackingAlgorithms {
           type: 'backtrack',
           row,
           col,
-          description: `Backtracking from (${row}, ${col}) - dead end`
+          description: `🔄 Backtracking from (${row}, ${col}) - dead end reached`
         });
       }
 
@@ -306,7 +339,19 @@ class BacktrackingAlgorithms {
       return found;
     };
 
+    steps.push({
+      type: 'start',
+      description: '🚀 Starting maze solver from (0,0) to exit'
+    });
+
     solve(0, 0);
+    
+    steps.push({
+      type: 'complete',
+      description: `✅ Completed! Found ${solutions.length} path(s) through the maze`,
+      totalSolutions: solutions.length
+    });
+
     return { steps, solutions, totalSolutions: solutions.length };
   }
 
@@ -321,7 +366,7 @@ class BacktrackingAlgorithms {
         steps.push({
           type: 'solution',
           permutation: [...current],
-          description: `Found permutation: [${current.join(', ')}]`
+          description: `🎉 Found permutation ${solutions.length}: [${current.join(', ')}]`
         });
         return;
       }
@@ -332,7 +377,8 @@ class BacktrackingAlgorithms {
             type: 'try',
             element: elements[i],
             index: i,
-            description: `Trying element ${elements[i]} at position ${current.length}`
+            currentPermutation: [...current],
+            description: `🔍 Trying element ${elements[i]} at position ${current.length}`
           });
 
           used[i] = true;
@@ -342,7 +388,8 @@ class BacktrackingAlgorithms {
             type: 'place',
             element: elements[i],
             position: current.length - 1,
-            description: `Placed ${elements[i]} at position ${current.length - 1}`
+            currentPermutation: [...current],
+            description: `✅ Placed ${elements[i]} at position ${current.length - 1}`
           });
 
           generate(used);
@@ -351,7 +398,8 @@ class BacktrackingAlgorithms {
           steps.push({
             type: 'backtrack',
             element: elements[i],
-            description: `Backtracking: removing ${elements[i]} from position ${current.length - 1}`
+            currentPermutation: [...current],
+            description: `🔄 Backtracking: removing ${elements[i]} from position ${current.length - 1}`
           });
 
           current.pop();
@@ -360,7 +408,19 @@ class BacktrackingAlgorithms {
       }
     };
 
+    steps.push({
+      type: 'start',
+      description: `🚀 Generating all permutations of [${elements.join(', ')}]`
+    });
+
     generate(Array(elements.length).fill(false));
+    
+    steps.push({
+      type: 'complete',
+      description: `✅ Completed! Generated ${solutions.length} permutations`,
+      totalSolutions: solutions.length
+    });
+
     return { steps, solutions, totalSolutions: solutions.length };
   }
 
@@ -375,7 +435,7 @@ class BacktrackingAlgorithms {
         index,
         currentSum,
         currentSubset: [...current],
-        description: `Exploring index ${index}, current sum: ${currentSum}, subset: [${current.join(', ')}]`
+        description: `🔍 Exploring index ${index}, current sum: ${currentSum}, subset: [${current.join(', ') || 'empty'}]`
       });
 
       if (currentSum === target) {
@@ -383,7 +443,7 @@ class BacktrackingAlgorithms {
         steps.push({
           type: 'solution',
           subset: [...current],
-          description: `Found subset that sums to ${target}: [${current.join(', ')}]`
+          description: `🎉 Found subset that sums to ${target}: [${current.join(', ')}]`
         });
         return;
       }
@@ -393,7 +453,7 @@ class BacktrackingAlgorithms {
           type: 'prune',
           index,
           currentSum,
-          description: `Pruning: current sum ${currentSum} exceeds target or reached end`
+          description: `✂️ Pruning: current sum ${currentSum} ${currentSum > target ? 'exceeds target' : 'reached end'}`
         });
         return;
       }
@@ -402,7 +462,8 @@ class BacktrackingAlgorithms {
       steps.push({
         type: 'include',
         element: numbers[index],
-        description: `Including ${numbers[index]} in subset`
+        currentSubset: [...current],
+        description: `➕ Including ${numbers[index]} in subset`
       });
 
       current.push(numbers[index]);
@@ -412,14 +473,27 @@ class BacktrackingAlgorithms {
       steps.push({
         type: 'exclude',
         element: numbers[index],
-        description: `Excluding ${numbers[index]} from subset (backtracking)`
+        currentSubset: [...current],
+        description: `➖ Excluding ${numbers[index]} from subset (backtracking)`
       });
 
       current.pop();
       findSubsets(index + 1, currentSum);
     };
 
+    steps.push({
+      type: 'start',
+      description: `🚀 Finding subsets of [${numbers.join(', ')}] that sum to ${target}`
+    });
+
     findSubsets(0, 0);
+    
+    steps.push({
+      type: 'complete',
+      description: `✅ Completed! Found ${solutions.length} subset(s) that sum to ${target}`,
+      totalSolutions: solutions.length
+    });
+
     return { steps, solutions, totalSolutions: solutions.length };
   }
 }
@@ -428,22 +502,27 @@ function BacktrackingVisualizer() {
   const navigate = useNavigate();
   const [algorithm, setAlgorithm] = useState('nqueens');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animationSpeed, setAnimationSpeed] = useState(200);
+  const [isPaused, setIsPaused] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(100); // Default to medium speed
   const [message, setMessage] = useState('Select a backtracking algorithm to visualize.');
   const [currentStep, setCurrentStep] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
   const [steps, setSteps] = useState([]);
   const [solutions, setSolutions] = useState([]);
   const [currentSolution, setCurrentSolution] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [showExplanations, setShowExplanations] = useState(true);
-
+  const [showComplexity, setShowComplexity] = useState(true);
+  
   // Problem-specific states
   const [boardSize, setBoardSize] = useState(4);
   const [mazeSize, setMazeSize] = useState(5);
   const [permutationSize, setPermutationSize] = useState(3);
   const [subsetNumbers, setSubsetNumbers] = useState('1,2,3,4,5');
   const [subsetTarget, setSubsetTarget] = useState(5);
+
+  const shouldStopRef = useRef(false);
+  const isPausedRef = useRef(false);
+  const currentStepRef = useRef(0);
 
   // Initialize problems
   const initializeNQueens = useCallback(() => {
@@ -472,15 +551,28 @@ function BacktrackingVisualizer() {
   }, []);
 
   const initializeMaze = useCallback(() => {
-    // 0 = path, 1 = wall
-    const maze = [
-      [0, 1, 0, 0, 0],
-      [0, 1, 0, 1, 0],
-      [0, 0, 0, 1, 0],
-      [0, 1, 1, 1, 0],
-      [0, 0, 0, 0, 0]
-    ];
+    // Generate maze based on size
+    const generateMaze = (size) => {
+      // Simple maze generation
+      const maze = Array(size).fill().map(() => Array(size).fill(0));
+      
+      // Add some random walls (1s)
+      for (let i = 0; i < size * size / 3; i++) {
+        const row = Math.floor(Math.random() * size);
+        const col = Math.floor(Math.random() * size);
+        if ((row !== 0 || col !== 0) && (row !== size-1 || col !== size-1)) {
+          maze[row][col] = 1;
+        }
+      }
+      
+      // Ensure start and end are open
+      maze[0][0] = 0;
+      maze[size-1][size-1] = 0;
+      
+      return maze;
+    };
 
+    const maze = generateMaze(mazeSize);
     return maze.map((row, rowIndex) => 
       row.map((value, colIndex) => new BacktrackingCell(rowIndex, colIndex, value))
     );
@@ -488,8 +580,18 @@ function BacktrackingVisualizer() {
 
   const [board, setBoard] = useState(initializeNQueens());
 
-  useEffect(() => {
-    // Reset board when algorithm changes
+  // Reset visualization - FIXED
+  const resetVisualization = useCallback(() => {
+    shouldStopRef.current = true;
+    isPausedRef.current = false;
+    setIsAnimating(false);
+    setIsPaused(false);
+    setCurrentStep(0);
+    currentStepRef.current = 0;
+    setSteps([]);
+    setSolutions([]);
+    setCurrentSolution(0);
+    
     switch (algorithm) {
       case 'nqueens':
         setBoard(initializeNQueens());
@@ -503,22 +605,32 @@ function BacktrackingVisualizer() {
       default:
         setBoard(initializeNQueens());
     }
-  }, [algorithm, initializeNQueens, initializeSudoku, initializeMaze, boardSize, mazeSize]);
+    
+    setMessage('Visualization reset. Ready to solve.');
+  }, [algorithm, initializeNQueens, initializeSudoku, initializeMaze]);
+
+  useEffect(() => {
+    resetVisualization();
+  }, [algorithm, boardSize, mazeSize, resetVisualization]);
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Solve problem
+  // Solve problem with step-by-step animation - FIXED
   const solveProblem = async () => {
+    if (isAnimating) return;
+    
     setIsAnimating(true);
     setIsPaused(false);
+    isPausedRef.current = false;
     setCurrentStep(0);
+    currentStepRef.current = 0;
     setSolutions([]);
     setCurrentSolution(0);
+    shouldStopRef.current = false;
 
     let result;
     switch (algorithm) {
       case 'nqueens':
-        const nQueensBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(0));
         result = BacktrackingAlgorithms.nQueens(boardSize);
         break;
       case 'sudoku':
@@ -545,67 +657,136 @@ function BacktrackingVisualizer() {
     setSolutions(result.solutions);
     setTotalSteps(result.steps.length);
 
-    // Execute animations
-    for (let i = 0; i < result.steps.length; i++) {
-      if (isPaused) {
-        // Wait until resumed
-        while (isPaused) {
-          await sleep(100);
-        }
+    // Execute animations step by step - FIXED with proper pause/resume
+    for (let i = currentStepRef.current; i < result.steps.length; i++) {
+      if (shouldStopRef.current) break;
+      
+      // Handle pause - FIXED
+      while (isPausedRef.current && !shouldStopRef.current) {
+        await sleep(100);
       }
+      
+      if (shouldStopRef.current) break;
 
       const step = result.steps[i];
       setCurrentStep(i + 1);
+      currentStepRef.current = i;
       setMessage(step.description);
 
-      // Update visualization based on step type
-      if (algorithm === 'nqueens' && step.type !== 'solution') {
-        const newBoard = initializeNQueens();
-        if (step.board) {
-          step.board.forEach((row, rowIndex) => {
-            row.forEach((cell, colIndex) => {
-              if (cell === 1) {
-                newBoard[rowIndex][colIndex].value = 'Q';
-                newBoard[rowIndex][colIndex].state = 'filled';
-              }
-            });
+      // Update visualization based on step type and algorithm
+      updateVisualization(step, i);
+
+      // FIXED: Reverse the speed logic like ArrayVisualizer - higher value = faster
+      const delay = 500 - animationSpeed;
+      await sleep(Math.max(delay, 50)); // Minimum 50ms delay
+    }
+
+    if (!shouldStopRef.current) {
+      if (result.solutions.length > 0) {
+        setMessage(`✅ Found ${result.solutions.length} solution(s)! Visualization complete.`);
+      } else {
+        setMessage('❌ No solution found for this problem.');
+      }
+    }
+
+    setIsAnimating(false);
+    shouldStopRef.current = false;
+  };
+
+  // Handle pause/resume - FIXED
+  const handlePauseResume = () => {
+    if (!isAnimating) return;
+    
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    isPausedRef.current = newPausedState;
+    
+    if (newPausedState) {
+      setMessage('⏸️ Animation paused');
+    } else {
+      setMessage('▶️ Animation resumed');
+    }
+  };
+
+  // Update visualization based on current step
+  const updateVisualization = (step, stepIndex) => {
+    if (algorithm === 'nqueens') {
+      const newBoard = initializeNQueens();
+      
+      // Show current queens placement
+      if (step.currentQueens) {
+        step.currentQueens.forEach(({ row, col }) => {
+          newBoard[row][col].value = 'Q';
+          newBoard[row][col].state = 'filled';
+        });
+      }
+      
+      // Highlight current cell being evaluated
+      if (step.row !== undefined && step.col !== undefined) {
+        newBoard[step.row][step.col].state = 
+          step.type === 'place' ? 'solution' :
+          step.type === 'conflict' ? 'conflict' : 
+          step.type === 'backtrack' ? 'backtracked' : 'current';
+        
+        if (step.type === 'backtrack') {
+          newBoard[step.row][step.col].animation = 'pulse';
+        }
+      }
+      
+      setBoard(newBoard);
+    } 
+    else if (algorithm === 'sudoku') {
+      const newBoard = initializeSudoku();
+      
+      // Update board state from step
+      if (step.board) {
+        step.board.forEach((row, rowIndex) => {
+          row.forEach((value, colIndex) => {
+            if (value !== 0) {
+              newBoard[rowIndex][colIndex].value = value;
+              newBoard[rowIndex][colIndex].state = 
+                newBoard[rowIndex][colIndex].original ? 'filled' : 'solution';
+            }
           });
-        }
-        if (step.row !== undefined && step.col !== undefined) {
-          newBoard[step.row][step.col].state = 
-            step.type === 'place' ? 'solution' :
-            step.type === 'conflict' ? 'conflict' : 'current';
-        }
-        setBoard(newBoard);
-      } else if (algorithm === 'maze' && step.path) {
-        const newBoard = initializeMaze();
+        });
+      }
+      
+      // Highlight current cell
+      if (step.row !== undefined && step.col !== undefined) {
+        newBoard[step.row][step.col].state = 
+          step.type === 'place-number' ? 'solution' :
+          step.type === 'conflict' ? 'conflict' :
+          step.type === 'backtrack' ? 'backtracked' : 'current';
+      }
+      
+      setBoard(newBoard);
+    }
+    else if (algorithm === 'maze') {
+      const newBoard = initializeMaze();
+      
+      // Show solution path
+      if (step.path) {
         step.path.forEach(([row, col]) => {
           newBoard[row][col].state = 'solution';
           newBoard[row][col].isSolutionPath = true;
         });
-        if (step.row !== undefined && step.col !== undefined) {
-          newBoard[step.row][step.col].state = 'current';
-        }
-        setBoard(newBoard);
       }
-
-      await sleep(animationSpeed);
+      
+      // Highlight current cell
+      if (step.row !== undefined && step.col !== undefined) {
+        newBoard[step.row][step.col].state = 
+          step.type === 'backtrack' ? 'backtracked' : 'current';
+      }
+      
+      setBoard(newBoard);
     }
-
-    if (result.solutions.length > 0) {
-      setMessage(`Found ${result.solutions.length} solution(s)!`);
-    } else {
-      setMessage('No solution found.');
-    }
-
-    setIsAnimating(false);
   };
 
   // Get cell color based on state
   const getCellColor = (cell) => {
     switch (cell.state) {
       case 'filled':
-        return '#3B82F6'; // Blue - filled cell
+        return '#3B82F6'; // Blue - original filled cell
       case 'conflict':
         return '#EF4444'; // Red - conflict
       case 'current':
@@ -614,6 +795,8 @@ function BacktrackingVisualizer() {
         return '#10B981'; // Green - part of solution
       case 'visited':
         return '#6B7280'; // Gray - visited
+      case 'backtracked':
+        return '#8B5CF6'; // Purple - backtracked
       default:
         return cell.value === 1 ? '#1F2937' : '#4B5563'; // Dark for walls, gray for empty
     }
@@ -636,6 +819,46 @@ function BacktrackingVisualizer() {
         return 'Select a backtracking algorithm to see its description.';
     }
   };
+
+  // Get algorithm complexity
+  const getAlgorithmComplexity = () => {
+    switch (algorithm) {
+      case 'nqueens':
+        return {
+          time: 'O(N!)',
+          space: 'O(N)',
+          description: 'Factorial time due to N! possible arrangements'
+        };
+      case 'sudoku':
+        return {
+          time: 'O(9^M)',
+          space: 'O(1)',
+          description: 'Exponential in number of empty cells M'
+        };
+      case 'maze':
+        return {
+          time: 'O(4^N)',
+          space: 'O(N)',
+          description: 'Exponential in path length N'
+        };
+      case 'permutations':
+        return {
+          time: 'O(N!)',
+          space: 'O(N)',
+          description: 'Factorial time for N elements'
+        };
+      case 'subset-sum':
+        return {
+          time: 'O(2^N)',
+          space: 'O(N)',
+          description: 'Exponential - all subsets of N elements'
+        };
+      default:
+        return { time: '', space: '', description: '' };
+    }
+  };
+
+  const complexity = getAlgorithmComplexity();
 
   // Render specific controls based on algorithm
   const renderAlgorithmControls = () => {
@@ -687,14 +910,14 @@ function BacktrackingVisualizer() {
             <input 
               type="range" 
               min="3" 
-              max="5" 
+              max="6" 
               value={permutationSize}
               onChange={(e) => setPermutationSize(parseInt(e.target.value))}
               className="range range-primary"
               disabled={isAnimating}
             />
             <div className="text-center text-sm text-gray-400">
-              {permutationSize} elements
+              {permutationSize} elements - {Array.from({length: permutationSize}, (_, i) => i + 1).join(', ')}
             </div>
           </div>
         );
@@ -733,32 +956,65 @@ function BacktrackingVisualizer() {
     }
   };
 
+  // Get speed label based on animation speed value - FIXED for reversed logic
+  const getSpeedLabel = () => {
+    if (animationSpeed >= 400) return 'Very Fast';
+    if (animationSpeed >= 300) return 'Fast';
+    if (animationSpeed >= 200) return 'Medium';
+    if (animationSpeed >= 100) return 'Slow';
+    return 'Very Slow';
+  };
+
   // Render visualization based on algorithm
   const renderVisualization = () => {
     if (algorithm === 'permutations' || algorithm === 'subset-sum') {
       return (
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-          <div className="text-center text-gray-500 py-16">
+        <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 min-h-96">
+          <div className="text-center text-gray-400 py-8">
             {algorithm === 'permutations' 
-              ? `Permutations of ${permutationSize} elements will be generated.`
-              : `Subset sum solutions for target ${subsetTarget} will be displayed.`
+              ? `Permutations of ${permutationSize} elements will be generated step by step.`
+              : `Subset sum solutions for numbers [${subsetNumbers}] and target ${subsetTarget} will be found.`
             }
-            <br />
-            Run the algorithm to see the solutions.
           </div>
           
           {solutions.length > 0 && (
             <div className="mt-6">
-              <h4 className="text-lg font-bold text-white mb-4">
-                Solutions ({solutions.length} found):
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-bold text-white">
+                  Solutions ({solutions.length} found)
+                </h4>
+                <div className="text-sm text-gray-400">
+                  {solutions.length > 1 && (
+                    <select 
+                      className="select select-bordered select-sm bg-gray-700 text-white"
+                      value={currentSolution}
+                      onChange={(e) => setCurrentSolution(parseInt(e.target.value))}
+                    >
+                      {solutions.map((_, index) => (
+                        <option key={index} value={index}>
+                          Solution {index + 1}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
                 {solutions.map((solution, index) => (
-                  <div key={index} className="bg-gray-800 p-3 rounded-lg">
-                    <div className="text-sm text-gray-300">
+                  <div 
+                    key={index} 
+                    className={`bg-gray-800 p-4 rounded-lg border-2 transition-all ${
+                      index === currentSolution ? 'border-blue-500 bg-blue-900/20' : 'border-gray-700'
+                    }`}
+                  >
+                    <div className="text-sm font-mono text-gray-300">
                       {algorithm === 'permutations' 
                         ? `[${solution.join(', ')}]`
-                        : `{${solution.join(', ')}}`}
+                        : `{${solution.join(', ')}} = ${subsetTarget}`}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Solution {index + 1}
                     </div>
                   </div>
                 ))}
@@ -771,37 +1027,43 @@ function BacktrackingVisualizer() {
 
     return (
       <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-        <div className="flex justify-center">
-          <div className={`grid gap-1 ${
-            algorithm === 'sudoku' ? 'grid-cols-9' : `grid-cols-${board[0]?.length || 5}`
-          }`}>
-            {board.map((row, rowIndex) => (
-              row.map((cell, colIndex) => (
-                <div
-                  key={cell.id}
-                  className={`
-                    w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border border-gray-600
-                    transition-all duration-300 transform hover:scale-110
-                    ${algorithm === 'sudoku' && (colIndex === 2 || colIndex === 5) ? 'border-r-2 border-r-gray-400' : ''}
-                    ${algorithm === 'sudoku' && (rowIndex === 2 || rowIndex === 5) ? 'border-b-2 border-b-gray-400' : ''}
-                  `}
-                  style={{
-                    backgroundColor: getCellColor(cell),
-                    boxShadow: cell.highlighted ? '0 0 10px rgba(245, 158, 11, 0.8)' : 'none'
-                  }}
-                >
-                  {cell.value && (
-                    <span className={`font-bold text-sm ${
-                      cell.original ? 'text-white' : 
-                      cell.state === 'solution' ? 'text-green-100' : 'text-gray-200'
-                    }`}>
-                      {cell.value}
-                    </span>
-                  )}
-                </div>
-              ))
-            ))}
-          </div>
+        {/* Fixed grid layout */}
+        <div 
+          className="grid gap-1 mx-auto"
+          style={{ 
+            gridTemplateColumns: `repeat(${board[0]?.length || boardSize}, minmax(0, 1fr))`,
+            width: 'fit-content'
+          }}
+        >
+          {board.map((row, rowIndex) => (
+            row.map((cell, colIndex) => (
+              <div
+                key={cell.id}
+                className={`
+                  w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border transition-all duration-300
+                  ${algorithm === 'sudoku' 
+                    ? `border-gray-600 ${(colIndex === 2 || colIndex === 5) ? 'border-r-2 border-r-gray-400' : ''} ${(rowIndex === 2 || rowIndex === 5) ? 'border-b-2 border-b-gray-400' : ''}`
+                    : 'border-gray-700'
+                  }
+                  ${cell.animation === 'pulse' ? 'animate-pulse' : ''}
+                `}
+                style={{
+                  backgroundColor: getCellColor(cell),
+                  boxShadow: cell.highlighted ? '0 0 10px rgba(245, 158, 11, 0.8)' : 'none'
+                }}
+              >
+                {cell.value && (
+                  <span className={`font-bold text-sm ${
+                    cell.original ? 'text-white' : 
+                    cell.state === 'solution' ? 'text-green-100' : 
+                    cell.state === 'backtracked' ? 'text-purple-100' : 'text-gray-200'
+                  }`}>
+                    {cell.value}
+                  </span>
+                )}
+              </div>
+            ))
+          ))}
         </div>
 
         {algorithm === 'nqueens' && (
@@ -812,7 +1074,7 @@ function BacktrackingVisualizer() {
 
         {algorithm === 'maze' && (
           <div className="mt-4 text-center text-sm text-gray-400">
-            Green path shows the solution from start (top-left) to end (bottom-right)
+            🟢 Start (0,0) → 🔴 End ({board.length-1},{board[0]?.length-1}) | Green path shows solution
           </div>
         )}
       </div>
@@ -830,8 +1092,8 @@ function BacktrackingVisualizer() {
           >
             ← Back to Visualizers
           </button>
-          <h1 className="text-4xl font-bold text-white mb-2">Backtracking Visualizer</h1>
-          <p className="text-lg text-gray-300">Visualize backtracking algorithms that systematically explore solution spaces</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Backtracking Algorithm Visualizer</h1>
+          <p className="text-lg text-gray-300">Visualize systematic exploration of solution spaces with backtracking</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -862,9 +1124,9 @@ function BacktrackingVisualizer() {
 
                 {renderAlgorithmControls()}
 
-                <div className="form-control mt-4">
+                <div className="flex gap-2 mt-4">
                   <button 
-                    className="btn btn-primary"
+                    className="btn btn-primary flex-1"
                     onClick={solveProblem}
                     disabled={isAnimating}
                   >
@@ -874,13 +1136,21 @@ function BacktrackingVisualizer() {
                       `Solve ${algorithm.charAt(0).toUpperCase() + algorithm.slice(1)}`
                     )}
                   </button>
+                  
+                  <button 
+                    className="btn btn-outline btn-error"
+                    onClick={resetVisualization}
+                    disabled={!isAnimating && currentStep === 0}
+                  >
+                    Reset
+                  </button>
                 </div>
 
                 {isAnimating && (
                   <div className="form-control">
                     <button 
                       className="btn btn-outline btn-warning mt-2"
-                      onClick={() => setIsPaused(!isPaused)}
+                      onClick={handlePauseResume}
                     >
                       {isPaused ? 'Resume' : 'Pause'}
                     </button>
@@ -900,12 +1170,16 @@ function BacktrackingVisualizer() {
                   <input 
                     type="range" 
                     min="50" 
-                    max="1000" 
+                    max="450" 
                     value={animationSpeed}
                     onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
                     className="range range-primary"
                     disabled={isAnimating}
                   />
+                  {/* FIXED: Correct speed labels - higher value = faster animation */}
+                  <div className="text-center text-sm text-gray-400">
+                    {getSpeedLabel()} (delay: {500 - animationSpeed}ms)
+                  </div>
                 </div>
 
                 <div className="form-control">
@@ -947,12 +1221,39 @@ function BacktrackingVisualizer() {
                 {solutions.length > 0 && (
                   <div className="mt-4 p-3 rounded-lg bg-gray-700">
                     <div className="text-lg font-bold text-green-400">
-                      ✓ Found {solutions.length} solution(s)
+                      ✅ Found {solutions.length} solution(s)
+                    </div>
+                    <div className="text-sm text-gray-300 mt-1">
+                      {algorithm === 'nqueens' && `${solutions.length} valid arrangement(s)`}
+                      {algorithm === 'permutations' && `${solutions.length} permutation(s)`}
+                      {algorithm === 'subset-sum' && `${solutions.length} subset(s) sum to ${subsetTarget}`}
                     </div>
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Time Complexity */}
+            {showComplexity && (
+              <div className="card bg-gray-800 shadow-lg border border-gray-700">
+                <div className="card-body">
+                  <h3 className="card-title text-white">Time Complexity</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Time:</span>
+                      <span className="font-bold text-yellow-400">{complexity.time}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Space:</span>
+                      <span className="font-bold text-blue-400">{complexity.space}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      {complexity.description}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Backtracking Explanation */}
             {showExplanations && (
@@ -960,14 +1261,13 @@ function BacktrackingVisualizer() {
                 <div className="card-body">
                   <h3 className="card-title text-white">Backtracking Concept</h3>
                   <div className="text-sm text-gray-300 space-y-2">
-                    <p><strong>Backtracking</strong> is a systematic way to try out different sequences of decisions until we find one that "works."</p>
-                    <p><strong>Key Steps:</strong></p>
+                    <p><strong>Backtracking</strong> systematically explores decision trees by:</p>
                     <ol className="list-decimal list-inside space-y-1">
-                      <li>Choose: Make a choice</li>
-                      <li>Explore: Recursively solve with the choice</li>
-                      <li>Unchoose: Backtrack if choice doesn't work</li>
+                      <li><strong>Choose</strong>: Make a candidate choice</li>
+                      <li><strong>Explore</strong>: Recursively solve with the choice</li>
+                      <li><strong>Unchoose</strong>: Backtrack if choice leads to dead end</li>
                     </ol>
-                    <p><strong>Time Complexity:</strong> Typically O(branching_factor^depth)</p>
+                    <p><strong>Key Insight</strong>: Prunes impossible branches early, more efficient than brute force.</p>
                   </div>
                 </div>
               </div>
@@ -976,11 +1276,11 @@ function BacktrackingVisualizer() {
             {/* Legend */}
             <div className="card bg-gray-800 shadow-lg border border-gray-700">
               <div className="card-body">
-                <h3 className="card-title text-white">Legend</h3>
+                <h3 className="card-title text-white">Visual Legend</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                    <span className="text-gray-300">Filled/Queen</span>
+                    <span className="text-gray-300">Filled/Original</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-yellow-500 rounded"></div>
@@ -993,6 +1293,10 @@ function BacktrackingVisualizer() {
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-red-500 rounded"></div>
                     <span className="text-gray-300">Conflict</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                    <span className="text-gray-300">Backtracked</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-gray-600 rounded"></div>
@@ -1013,14 +1317,14 @@ function BacktrackingVisualizer() {
                       word.charAt(0).toUpperCase() + word.slice(1)
                     ).join(' ')} Visualization
                   </h3>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-gray-400 text-right max-w-md">
                     {getAlgorithmDescription()}
                   </div>
                 </div>
 
                 {renderVisualization()}
 
-                {/* Algorithm Information */}
+                {/* Algorithm Process */}
                 <div className="mt-6">
                   <h4 className="text-lg font-bold text-white mb-3">Backtracking Process</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1035,33 +1339,32 @@ function BacktrackingVisualizer() {
                       </ul>
                     </div>
                     <div className="bg-gray-700 p-4 rounded-lg">
-                      <h5 className="font-bold text-white mb-2">Time Complexity</h5>
+                      <h5 className="font-bold text-white mb-2">Key Steps</h5>
                       <ul className="text-gray-300 text-sm space-y-1">
-                        <li>• N-Queens: O(N!)</li>
-                        <li>• Sudoku: O(9ᴹ) where M is empty cells</li>
-                        <li>• Maze: O(4ᴺ) where N is path length</li>
-                        <li>• Permutations: O(N!)</li>
-                        <li>• Subset Sum: O(2ᴺ)</li>
+                        <li>1. <strong>Base Case</strong>: Check if solution is complete</li>
+                        <li>2. <strong>Choose</strong>: Make a candidate choice</li>
+                        <li>3. <strong>Validate</strong>: Check if choice is valid</li>
+                        <li>4. <strong>Explore</strong>: Recursively solve with choice</li>
+                        <li>5. <strong>Backtrack</strong>: Undo choice if it fails</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Applications and Examples */}
+            {/* Applications and Optimization */}
             <div className="card bg-gray-800 shadow-lg border border-gray-700 mt-6">
               <div className="card-body">
-                <h3 className="card-title text-white">Backtracking Applications</h3>
+                <h3 className="card-title text-white">Backtracking Applications & Optimization</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-bold text-white mb-2">Common Problems</h4>
+                    <h4 className="font-bold text-white mb-2">Common Applications</h4>
                     <ul className="text-gray-300 text-sm space-y-1">
-                      <li>• <strong>Puzzle Solving</strong>: Sudoku, Crosswords</li>
-                      <li>• <strong>Combinatorial Problems</strong>: N-Queens, Knight's Tour</li>
+                      <li>• <strong>Puzzle Solving</strong>: Sudoku, Crosswords, N-Queens</li>
+                      <li>• <strong>Combinatorial Problems</strong>: Permutations, Combinations</li>
                       <li>• <strong>Path Finding</strong>: Mazes, Route Planning</li>
-                      <li>• <strong>Constraint Satisfaction</strong>: Graph Coloring</li>
+                      <li>• <strong>Constraint Satisfaction</strong>: Graph Coloring, Scheduling</li>
                       <li>• <strong>Optimization</strong>: Knapsack, Subset Sum</li>
                     </ul>
                   </div>
@@ -1076,70 +1379,8 @@ function BacktrackingVisualizer() {
                     </ul>
                   </div>
                 </div>
-
-                {/* Real-world Applications */}
-                <div className="mt-6">
-                  <h4 className="font-bold text-white mb-3">Real-world Applications</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="bg-gray-700 p-3 rounded-lg">
-                      <h5 className="font-bold text-yellow-400 mb-2">AI and Games</h5>
-                      <p className="text-gray-300">Used in game playing algorithms, puzzle solvers, and constraint satisfaction problems.</p>
-                    </div>
-                    <div className="bg-gray-700 p-3 rounded-lg">
-                      <h5 className="font-bold text-yellow-400 mb-2">Network Routing</h5>
-                      <p className="text-gray-300">Finds optimal paths in computer networks and transportation systems.</p>
-                    </div>
-                    <div className="bg-gray-700 p-3 rounded-lg">
-                      <h5 className="font-bold text-yellow-400 mb-2">Resource Allocation</h5>
-                      <p className="text-gray-300">Solves scheduling, allocation, and assignment problems efficiently.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Comparison with Other Techniques */}
-                <div className="mt-6">
-                  <h4 className="font-bold text-white mb-3">Comparison with Other Techniques</h4>
-                  <div className="overflow-x-auto">
-                    <table className="table table-zebra w-full">
-                      <thead>
-                        <tr>
-                          <th className="bg-gray-700 text-white">Technique</th>
-                          <th className="bg-gray-700 text-white">When to Use</th>
-                          <th className="bg-gray-700 text-white">Pros</th>
-                          <th className="bg-gray-700 text-white">Cons</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Backtracking</td>
-                          <td>Constraint satisfaction, combinatorial problems</td>
-                          <td>Guaranteed to find solution, systematic</td>
-                          <td>Can be slow for large problems</td>
-                        </tr>
-                        <tr>
-                          <td>Dynamic Programming</td>
-                          <td>Optimization, overlapping subproblems</td>
-                          <td>Efficient, avoids recomputation</td>
-                          <td>Requires optimal substructure</td>
-                        </tr>
-                        <tr>
-                          <td>Greedy Algorithms</td>
-                          <td>Optimization with greedy choice property</td>
-                          <td>Fast, simple to implement</td>
-                          <td>May not find optimal solution</td>
-                        </tr>
-                        <tr>
-                          <td>Divide and Conquer</td>
-                          <td>Problems that can be divided independently</td>
-                          <td>Efficient, parallelizable</td>
-                          <td>Requires independent subproblems</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
               </div>
-            </div>
+            </div> 
           </div>
         </div>
       </div>
@@ -1148,3 +1389,4 @@ function BacktrackingVisualizer() {
 }
 
 export default BacktrackingVisualizer;
+
