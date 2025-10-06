@@ -13,7 +13,7 @@ const cors = require('cors');
 
 
 app.use(cors({
-    origin:'http://project-algonaut.vercel.app',
+    origin:'https://project-algonaut.vercel.app',
     credentials: true
 }))
 app.use(express.json());
