@@ -1,4 +1,3 @@
-// authSlice.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosClient from './utils/axiosClient'
 
@@ -17,7 +16,7 @@ const getInitialState = () => {
   return {
     user: null,
     isAuthenticated: false,
-    loading: true, // Start with loading true
+    loading: true,
     error: null
   };
 };
