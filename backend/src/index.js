@@ -24,6 +24,10 @@ app.options('*', cors({
     credentials: true
 }));
 
+app.get("/", (req, res) => {
+    res.send("Hello");
+    console.log("hello");
+})
 
 app.use(express.json());
 app.use(cookieParser());
