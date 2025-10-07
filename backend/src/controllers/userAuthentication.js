@@ -75,15 +75,14 @@ const login = async (req, res) => {
             firstName: user.firstName,
             emailId: user.emailId,
             _id: user._id,
-            role: user.role,
-            token: token ? token : "no token"
+            role: user.role
         }
         // Send token in cookie
         res.cookie("token", token, {
             httpOnly: true,           
             secure: true,             
-            sameSite: "none",         // Required for cross-origin
-            maxAge: ms("7d"),         // Keep your 7-day expiry
+            sameSite: "none",
+            maxAge: ms("7d")
         });
 
 

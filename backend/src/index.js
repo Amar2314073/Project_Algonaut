@@ -11,7 +11,7 @@ const aiRouter = require("./routes/aiChatting");
 const videoRouter = require("./routes/videoCreation");
 const cors = require('cors');
 
-
+app.set("trust proxy", 1);
 app.use(cors({
     origin:['http://localhost:5173', 'https://project-algonaut.vercel.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
