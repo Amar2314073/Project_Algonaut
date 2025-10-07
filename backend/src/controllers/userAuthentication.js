@@ -76,7 +76,7 @@ const login = async (req, res) => {
             emailId: user.emailId,
             _id: user._id,
             role: user.role,
-            token
+            token: token ? token : "no token"
         }
         // Send token in cookie
         res.cookie("token", token, {
