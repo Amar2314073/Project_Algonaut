@@ -24,7 +24,12 @@ const register = async (req, res) => {
         // creating user and sending token after register
         const user = await User.create(req.body);
         const token = jwt.sign({ _id: user._id, emailId: emailId, role: 'user' }, process.env.JWT_KEY, { expiresIn: '7d' })
-        res.cookie('token', token, { maxAge: ms('7d') });
+        res.cookie("token", token, {
+            httpOnly: true,           
+            secure: true,             
+            sameSite: "none",
+            maxAge: ms("7d")
+        });
 
         const reply = {
             firstName: user.firstName,
