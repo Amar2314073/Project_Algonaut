@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+app.set('trust proxy', 1); 
+
 require('dotenv').config();
 const main = require("./config/db");
 const cookieParser = require('cookie-parser');
