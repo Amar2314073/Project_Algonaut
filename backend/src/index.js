@@ -13,7 +13,7 @@ const cors = require('cors');
 
 
 app.use(cors({
-    origin:['http://localhost:5173', 'https://project-algonaut.vercel.app', 'https://project-algonaut-1.onrender.com'],
+    origin:['http://localhost:5173', 'https://project-algonaut.vercel.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

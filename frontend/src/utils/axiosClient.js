@@ -4,9 +4,7 @@ import axios from "axios";
 const isLocal = window.location.hostname === 'localhost';
 
 const axiosClient = axios.create({
-  baseURL: isLocal
-    ? 'http://localhost:3000' // backend running locally
-    : 'https://project-algonaut-4i35.vercel.app', // deployed backend
+  baseURL: 'https://project-algonaut-1.onrender.com',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
