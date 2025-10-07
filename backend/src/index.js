@@ -19,10 +19,10 @@ app.use(cors({
     credentials: true
 }))
 
-app.options('*', cors({
-    origin: ['http://localhost:5173', 'https://project-algonaut.vercel.app'],
-    credentials: true
-}));
+// app.options('*', cors({
+//     origin: ['http://localhost:5173', 'https://project-algonaut.vercel.app'],
+//     credentials: true
+// }));
 
 app.get("/", (req, res) => {
     res.send("Hello");
