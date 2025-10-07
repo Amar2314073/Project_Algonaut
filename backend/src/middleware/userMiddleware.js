@@ -5,10 +5,8 @@ const User = require('../models/user');
 const userMiddleware = async(req,res,next)=>{
     try{
         const {token} = req.cookies;
-        console.log("first");
         if(!token)
             throw new Error("Token is not present");
-        console.log(token);
 
         const payload = jwt.verify(token,process.env.JWT_KEY);
         const {_id} = payload;

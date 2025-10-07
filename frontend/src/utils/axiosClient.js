@@ -5,7 +5,7 @@ const isLocal = window.location.hostname === 'localhost';
 
 const axiosClient = axios.create({
   baseURL: isLocal
-    ? 'https://localhost:3000' // backend running locally
+    ? 'http://localhost:3000' // backend running locally
     : 'https://project-algonaut-1.onrender.com', // deployed backend'
   withCredentials: true,
   headers: {

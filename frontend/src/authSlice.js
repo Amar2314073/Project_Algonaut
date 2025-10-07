@@ -28,17 +28,23 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await axiosClient.post('/user/register', userData);
       const user = response.data.user;
+
       // Save to localStorage
       localStorage.setItem('auth', JSON.stringify({
         user: user,
         isAuthenticated: true
       }));
+
       return user;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue({
+        message: error.response?.data || error.message,
+        status: error.response?.status
+      });
     }
   }
 );
+
 
 // Login
 export const loginUser = createAsyncThunk(

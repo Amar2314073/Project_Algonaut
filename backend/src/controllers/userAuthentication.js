@@ -23,6 +23,8 @@ const register = async (req, res) => {
 
         // creating user and sending token after register
         const user = await User.create(req.body);
+        if(!user)   throw new Error("User errorr");
+        console.log(user);
         const token = jwt.sign({ _id: user._id, emailId: emailId, role: 'user' }, process.env.JWT_KEY, { expiresIn: '7d' })
         res.cookie("token", token, {
             httpOnly: true,           
@@ -45,7 +47,8 @@ const register = async (req, res) => {
 
     }
     catch (err) {
-        res.status(400).send("Error: " + err);
+        console.log(err);
+        res.status(500).send("Error: " + err);
     }
 }
 
