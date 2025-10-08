@@ -15,6 +15,11 @@ const register = async (req, res) => {
         // validate the data
         validateUser(req.body);
 
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ message: "User already exists with this email" });
+        }
+
         const { firstName, emailId, password } = req.body;
         req.body.role = 'user';
 
@@ -23,8 +28,6 @@ const register = async (req, res) => {
 
         // creating user and sending token after register
         const user = await User.create(req.body);
-        if(!user)   throw new Error("User errorr");
-        console.log(user);
         const token = jwt.sign({ _id: user._id, emailId: emailId, role: 'user' }, process.env.JWT_KEY, { expiresIn: '7d' })
         res.cookie("token", token, {
             httpOnly: true,           
@@ -134,6 +137,7 @@ const adminRegister = async (req, res) => {
         validateUser(req.body);
 
         const { firstName, emailId, password } = req.body;
+        req.body.role = 'admin'
 
         // hashing the password before register
         req.body.password = await bcrypt.hash(password, 10);
@@ -141,9 +145,26 @@ const adminRegister = async (req, res) => {
         // sending token after register
         const user = await User.create(req.body);
 
-        const token = jwt.sign({ _id: user._id, emailId: emailId, role: user.role }, process.env.JWT_KEY, { expiresIn: 60 * 60 })
-        res.cookie('token', token, { maxAge: 60 * 60 * 1000 });
-        res.status(201).send("User Registered Successfully!");
+        const token = jwt.sign({ _id: user._id, emailId: emailId, role: 'admin' }, process.env.JWT_KEY, { expiresIn: '7d' })
+        res.cookie("token", token, {
+            httpOnly: true,           
+            secure: true,             
+            sameSite: "none",
+            maxAge: ms("7d")
+        });
+
+        const reply = {
+            firstName: user.firstName,
+            emailId: user.emailId,
+            _id: user._id,
+            role: user.role
+        }
+
+        res.status(200).json({
+            user: reply,
+            message: "Registered Successfully!"
+        });
+
 
     }
     catch (err) {
@@ -211,6 +232,8 @@ const updateProfile = async (req, res) => {
         res.status(500).send("Error: " + err.message);
     }
 };
+
+
 
 
 module.exports = { register, login, logout, adminRegister, deleteProfile, updateProfile };

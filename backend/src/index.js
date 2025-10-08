@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-
 require('dotenv').config();
 const main = require("./config/db");
 const cookieParser = require('cookie-parser');
@@ -14,9 +13,7 @@ const cors = require('cors');
 
 
 app.use(cors({
-    origin:['http://localhost:5173', 'https://project-algonaut.vercel.app', 'https://algonaut-coding-platform1.onrender.com'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin:['http://localhost:5173', 'https://project-algonaut.vercel.app'],
     credentials: true
 }))
 

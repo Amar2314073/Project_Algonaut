@@ -10,13 +10,17 @@ const validateUser = (data)=>{
     if(!IsAllowed)
         throw new Error("Some Field is Missing");
 
+    if (typeof data.name !== 'string' || data.name.trim().length === 0) {
+        throw new Error('Name is required');
+    }
+
     // Email verification
     if(!validator.isEmail(data.emailId))
         throw new Error('Invalid Email!');
 
     // Password verification
     if(!validator.isStrongPassword(data.password))
-        throw new Error('Week Password!');
+        throw new Error('Weak Password!');
 }
 
 module.exports = validateUser;
