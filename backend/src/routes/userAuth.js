@@ -1,3 +1,4 @@
+
 const express = require('express');
 const authRouter = express.Router();
 const {register, login, logout, adminRegister, deleteProfile, updateProfile} = require('../controllers/userAuthentication');

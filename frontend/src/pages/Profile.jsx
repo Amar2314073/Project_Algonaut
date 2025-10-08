@@ -57,7 +57,7 @@ function Profile() {
   const location = useLocation();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { data: allProblems, loading: problemsLoading } = useSelector((state) => state.allProblems);
-  const [solvedProblems, setSolvedProblems] = useState(null);
+  const [solvedProblems, setSolvedProblems] = useState(null); // Start with null to track loading
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
