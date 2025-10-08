@@ -90,7 +90,7 @@ function Profile() {
         lastName: user.lastName || "",
         emailId: user.emailId || "",
         age: user.age || "",
-        image: user.image || ""
+        image: user.image || "https://www.gravatar.com/avatar/?d=mp&s=200"
       });
 
       const fetchSolved = async () => {
@@ -155,7 +155,7 @@ function Profile() {
           <div className="avatar">
             <div className="w-24 h-24 rounded-full overflow-hidden">
               <img 
-                src={formData.image || "https://www.gravatar.com/avatar/?d=mp&s=200"} 
+                src={formData.image} 
                 alt="profile" 
                 className="w-full h-full object-cover"
               />
@@ -170,7 +170,7 @@ function Profile() {
               <input className="input input-bordered w-full" name="age" value={formData.age} onChange={handleChange} placeholder="Age" type="number"/>
               <input className="input input-bordered w-full" name="image" value={formData.image} onChange={handleChange} placeholder="Profile Image URL" />
               <div className="flex gap-2 mt-2">
-                <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                <button className="btn btn-primary" onClick={handleSave} disabled={!editMode}>Save</button>
                 <button className="btn btn-ghost" onClick={()=>setEditMode(false)}>Cancel</button>
               </div>
             </div>
