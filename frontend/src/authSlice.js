@@ -106,7 +106,7 @@ export const updateUser = createAsyncThunk(
   'auth/updateUser',
   async (updatedData, { rejectWithValue }) => {
     try {
-      const { data } = await axiosClient.put('/user/updateProfile', updatedData);
+      const { data } = await axiosClient.put('/user/profile', updatedData);
       // Update localStorage
       const storedAuth = localStorage.getItem('auth');
       if (storedAuth) {

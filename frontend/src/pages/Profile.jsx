@@ -120,7 +120,7 @@ function Profile() {
 
   const handleSave = async () => {
     try {
-      const { data } = await axiosClient.put("/user/updateProfile", formData);
+      const { data } = await axiosClient.put("/user/profile", formData);
       dispatch(updateUser(data));
       setEditMode(false);
     } catch (err) {
@@ -170,7 +170,7 @@ function Profile() {
               <input className="input input-bordered w-full" name="age" value={formData.age} onChange={handleChange} placeholder="Age" type="number"/>
               <input className="input input-bordered w-full" name="image" value={formData.image} onChange={handleChange} placeholder="Profile Image URL" />
               <div className="flex gap-2 mt-2">
-                <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                <button className="btn btn-primary" onClick={handleSave} disabled={editMode}>Save</button>
                 <button className="btn btn-ghost" onClick={()=>setEditMode(false)}>Cancel</button>
               </div>
             </div>
