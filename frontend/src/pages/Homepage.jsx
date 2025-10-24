@@ -52,15 +52,15 @@ function Homepage() {
   };
 
   const handleAdminClick = () => {
-    navigate("/admin", { replace: true });
+    navigate("/admin");
   };
 
   const handleProfileClick = () => {
-    navigate("/profile", { replace: true });
+    navigate("/profile");
   };
 
   const handleDSAVisualizerClick = () => {
-    navigate('/dsaVisualizer', {replace:true});
+    navigate('/dsaVisualizer');
   }
 
   // Filter logic

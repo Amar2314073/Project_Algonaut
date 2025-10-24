@@ -44,7 +44,7 @@ const userSchema = new Schema({
     },
     image:{
         type:String,
-        default: ''
+        default: 'https://www.gravatar.com/avatar/?d=mp&s=200'
     }
 },{
     timestamps:true

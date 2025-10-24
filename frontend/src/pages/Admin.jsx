@@ -60,15 +60,15 @@ function Admin() {
   ];
 
   const handleNavigation = (route) => {
-    navigate(route, { replace: true });
+    navigate(route);
   };
 
   const handleHomeClick = () => {
-    navigate('/', { replace: true });
+    navigate('/');
   };
 
   const handleProfileClick = () => {
-    navigate('/profile', { replace: true });
+    navigate('/profile');
   };
 
   const handleLogout = () => {

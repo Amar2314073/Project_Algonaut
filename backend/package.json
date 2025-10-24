@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "build": "echo 'No build process' && npm install"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@google/genai": "^1.21.0",
     "@reduxjs/toolkit": "^2.8.2",
@@ -33,5 +32,6 @@
   },
   "devDependencies": {
     "parcel": "^2.15.4"
-  }
+  },
+  "description": ""
 }
