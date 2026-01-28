@@ -1,12 +1,7 @@
 const { createClient } = require('redis');
 
 const redisClient = createClient({
-    username: 'default',
-    password: process.env.REDIS_PASS,
-    socket: {
-        host: 'redis-15951.c264.ap-south-1-1.ec2.redns.redis-cloud.com',
-        port: 15951
-    }
+    url: process.env.REDIS_URL,
 });
 
 redisClient.on('error', (err) => {
@@ -14,3 +9,4 @@ redisClient.on('error', (err) => {
 });
 
 module.exports = redisClient;
+

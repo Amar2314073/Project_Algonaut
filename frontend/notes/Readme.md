@@ -34,6 +34,10 @@ npm install tailwindcss@latest tailwindcss daisyui@latest
 
 <!-- visit daisyui docs and follow the steps to use tailwindcss and daisyui -->
 
+# Material UI
+
+npm install @mui/material @emotion/react @emotion/styled 
+
 # <!-- ********************************************************************************* -->
 
 
