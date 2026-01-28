@@ -152,7 +152,6 @@ const adminRegister = async (req, res) => {
 }
 
 // delete User profile 
-
 const deleteProfile = async (req, res) => {
     try {
         const userId = req.result._id;

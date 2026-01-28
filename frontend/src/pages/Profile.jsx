@@ -62,7 +62,7 @@ function Profile() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    emailId: "",
     age: "",
     image: ""
   });
