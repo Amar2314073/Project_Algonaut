@@ -21,16 +21,13 @@ app.use(cors({
 }))
 
 
-app.get("/", (req, res) => {
-    res.send("Hello");
-    console.log("hello");
-})
-
-
 
 app.use(express.json());
 app.use(cookieParser());
 
+app.get("/health", (req, res) => {
+  res.status(200).send("Server is awake 🚀");
+});
 
 app.use('/user',authRouter);
 app.use('/problem',problemRouter);
